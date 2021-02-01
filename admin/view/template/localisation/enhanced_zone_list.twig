@@ -1,0 +1,289 @@
+{{ header }}{{ column_left }}
+<div id="content">
+  <div class="page-header">
+    <div class="container-fluid">
+      <div class="pull-right">
+        <a href="{{country_manager }}" data-toggle="tooltip" title="{{ text_country_manager }}" class="btn btn-primary"><i class="fa fa-globe"></i></a>
+        <button type="button" class="btn btn-success" data-toggle="tooltip" title="{{ text_enable }}" id="enable_zones"><i class="fa fa-check"></i></button>
+        <button type="button" class="btn btn-warning" data-toggle="tooltip" title="{{ text_disable }}" id="disable_zones"><i class="fa fa-close"></i></button> 
+        <a href="{{ add }}" data-toggle="tooltip" title="{{ button_add }}" class="btn btn-primary"><i class="fa fa-plus"></i></a>
+        <button type="button" data-toggle="tooltip" title="{{ button_delete }}" class="btn btn-danger" onclick="confirm('{{ text_confirm }}') ? $('#form-zone').submit() : false;"><i class="fa fa-trash-o"></i></button>
+      </div>
+      <h1><i class="fa fa-globe"></i> {{ heading_title }}</h1>
+      <ul class="breadcrumb">
+        {% for breadcrumb in breadcrumbs %}
+        <li><a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+  <div class="container-fluid">
+    {% if error_warning %}
+    <div class="alert alert-danger alert-dismissible"><i class="fa fa-exclamation-circle"></i> {{ error_warning }}
+      <button type="button" class="close" data-dismiss="alert">&times;</button>
+    </div>
+    {% endif %}
+    {% if success %}
+    <div class="alert alert-success alert-dismissible"><i class="fa fa-check-circle"></i> {{ success }}
+      <button type="button" class="close" data-dismiss="alert">&times;</button>
+    </div>
+    {% endif %}
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title"><i class="fa fa-list"></i> {{ text_list }}</h3>
+      </div>
+      <div class="panel-body">
+
+	  <div class="well" style="padding:0 19px">
+        <div class="row">
+          <div class="col-sm-4">
+            <div class="form-group">
+              <label class="control-label" for="input-country">{{ entry_country }}</label>
+              <input type="text" name="filter_country" value="{{ filter_country }}" placeholder="{{ entry_country }}" id="input-country" class="form-control" />
+            </div>
+          </div>
+          <div class="col-sm-4">
+            <div class="form-group">
+              <label class="control-label" for="input-zstatus">{{ entry_zstatus }}</label>
+              <select name="filter_status" id="input-zstatus" class="form-control" onchange="filterZones();">
+                <option value="*"></option>
+                {% if filter_status %}
+                <option value="1" selected="selected">{{ text_enabled }}</option>
+                {% else %}
+                <option value="1">{{ text_enabled }}</option>
+                {% endif %}
+                {% if not filter_status and (not (filter_status is null)) %}
+                <option value="0" selected="selected">{{ text_disabled }}</option>
+                {% else %}
+                <option value="0">{{ text_disabled }}</option>
+                {% endif %}
+              </select>                
+            </div>          
+          </div>
+          <div class="col-sm-4 text-right" style="margin-top:28px; margin-bottom:0">
+            <button type="button" id="button-reset" class="btn btn-warning"><i class="fa fa-close"></i> <?php echo $button_clear; ?></button>
+          </div>
+        </div>
+      </div>
+
+        <form action="{{ delete }}" method="post" enctype="multipart/form-data" id="form-zone">
+          <div class="table-responsive">
+            <table class="table table-bordered table-hover">
+              <thead>
+                <tr>
+                  <td style="width: 1px;" class="text-center"><input type="checkbox" onclick="$('input[name*=\'selected\']').prop('checked', this.checked);" /></td>
+                  <td class="text-left">{% if sort == 'c.name' %}
+                    <a href="{{ sort_country }}" class="{{ order|lower }}">{{ column_country }}</a>
+                    {% else %}
+                    <a href="{{ sort_country }}">{{ column_country }}</a>
+                    {% endif %}
+                  <td class="text-left">{% if sort == 'c.country_id' %}
+                    <a href="{{ sort_cid }}" class="{{ order|lower }}">{{ column_country_id }}</a>
+                    {% else %}
+                    <a href="{{ sort_cid }} ">{{ column_country_id }}</a>
+                    {% endif %}
+                  <td class="text-left">{% if sort == 'z.name' %}
+                    <a href="{{ sort_name }}" class="{{ order|lower }}">{{ column_name }}</a>
+                    {% else %}
+                    <a href="{{ sort_name }}">{{ column_name }}</a>
+                    {% endif %}
+                  <td class="text-left"> {% if sort == 'z.code' %}
+                    <a href="{{ sort_code }}" class="{{ order|lower }}">{{ column_code }}</a>
+                    {% else %}
+                    <a href="{{ sort_code }}">{{ column_code }}</a>
+                   {% endif %}
+                  <td class="text-left">{% if sort == 'z.zone_id' %}
+                    <a href="{{ sort_zid }}" class="{{ order|lower }}">{{ column_zone_id }}</a>
+                    {% else %}
+                    <a href="{{ sort_zid }}">{{ column_zone_id }}</a>
+                    {% endif %} 
+                  <td class="text-center">{% if sort == 'z.status' %}
+                    <a href="{{ sort_zstatus }}" class="{{ order|lower }}">{{ column_zstatus }}</a>
+                    {% else %}
+                    <a href="{{ sort_zstatus }}">{{ column_zstatus }}</a>
+                    {% endif %}
+                  <td class="text-right">{{ column_action }}</td>
+                </tr>
+              </thead>
+              <tbody>
+                {% if (zones) %} 
+                {% for zone in zones %} 
+                <tr>
+                  <td class="text-center">{% if (  zone.zone_id in selected ) %} 
+                    <input type="checkbox" name="selected[]" value="{{ zone.zone_id }}" checked="checked" />
+                    {% else %} 
+                    <input type="checkbox" name="selected[]" value="{{ zone.zone_id }}" />
+                    {% endif %}</td>
+                  <td class="text-left">{{ zone.country }}</td>
+                  <td class="text-left">{{ zone.country_id }}</td>
+                  <td class="text-left">{{ zone.name }}</td>
+                  <td class="text-left">{{ zone.code }}</td>
+                  <td class="text-left">{{ zone.zone_id }}</td>
+                  <td class="text-center"><a href="javascript:void(0)" class="columnstatus" id="status-{{ zone.zone_id }}" style="outline:none;">{{ zone.zstatus }}</a></td>
+                  <td class="text-right"><a href="{{ zone.edit }}" data-toggle="tooltip" title="{{ button_edit }}" class="btn btn-primary"><i class="fa fa-pencil"></i></a></td>
+                </tr>
+                {% endfor %} 
+                {% else %} 
+                <tr>
+                  <td class="text-center" colspan="8">{{ text_no_results }}</td>
+                </tr>
+                {% endif %} 
+              </tbody>
+            </table>
+          </div>
+        </form>
+        <div class="row">
+          <div class="col-sm-6 text-left">{{ pagination }}</div>
+          <div class="col-sm-6 text-right">{{ results }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="text/javascript"><!--
+$(document).ready(function() {
+	$(".alert-success").hide(0).delay(10).fadeIn(500);
+	$(".alert-success").show(0).delay(3000).fadeOut(2000);
+});
+
+function filterZones() {
+	url = 'index.php?route=localisation/enhanced_zone&user_token={{ user_token }}';
+	var filter_country = $('input[name=\'filter_country\']').val();	
+	if (filter_country) {
+		url += '&filter_country=' + encodeURIComponent(filter_country);
+	}
+	var filter_status = $('select[name=\'filter_status\']').val();
+	if (filter_status != '*') {
+		url += '&filter_status=' + encodeURIComponent(filter_status);
+	}
+	location = url;
+}
+
+$('#button-reset').on('click', function() {
+    var url = 'index.php?route=localisation/enhanced_zone&user_token={{ user_token }}';	
+	$('input[name=\'filter_country\']').val('');
+	$('select[name=\'filter_status\']').val('*');
+	location = url;
+});
+
+$('input[name=\'filter_country\']').autocomplete({
+	'source': function(request, response) {
+		$.ajax({
+			url: 'index.php?route=localisation/enhanced_zone/autocomplete&user_token={{ user_token }}&filter_country=' +  encodeURIComponent(request),
+			dataType: 'json',			
+			success: function(json) {
+				response($.map(json, function(item) {
+					return {
+						label: item['name'],
+						value: item['country_id']
+					}
+				}));
+			}
+		});
+	},
+	'select': function(item) {
+		$('input[name=\'filter_country\']').val(item['label']);
+		filterZones();
+	}	
+});
+
+$(document).delegate('.columnstatus', 'click', function(e) {
+	$(".alert, .alert2").remove();
+	var object_id = $(this).attr('id');
+	$.ajax({
+		url: 'index.php?route=localisation/enhanced_zone/updateStatus&user_token={{ user_token }}',
+		type: 'get',
+		data: {object_id:object_id},
+		dataType: 'html',
+		success: function(html) {
+			if(html!=''){				
+				$('#'+object_id).html(html);				
+			}
+			$(".page-header .container-fluid .pull-right").prepend('<span class="alert2 alert-success2 pull-left"><i class="fa fa-check-circle"></i> <?php echo $text_success_zstatus; ?></span>');
+			$(".alert-success2").hide(0).delay(10).fadeIn(500);
+   			$(".alert-success2").show(0).delay(3000).fadeOut(2000);
+		},			
+		error: function(xhr, ajaxOptions, thrownError) {
+			alert(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
+		}
+	});	
+});
+
+$(document).delegate('#enable_zones', 'click', function(e) {
+	e.preventDefault();	
+	$(".alert, .alert2").remove();
+	$('[data-toggle=\'tooltip\']').tooltip('hide');
+	var ajaxUrl = 'index.php?route=localisation/enhanced_zone/enableZones&user_token={{ user_token }}';
+	$.ajax({
+		url: ajaxUrl,
+		type: 'post',
+		data: $('input[name*=\'selected\']:checked').serialize(),
+		dataType: 'json',
+		beforeSend: function() {
+			$('#enable_zones i').replaceWith('<i class="fa fa-cog fa-spin"></i>');
+			$('#enable_zones').prop('disabled', true);			
+		},
+		complete: function() {
+			$('#enable_zones i').replaceWith('<i class="fa fa-check"></i>');
+			$('#enable_zones').prop('disabled', false);
+		},
+		success: function(json) {
+			if(json['success']) {
+				$(".page-header .container-fluid .pull-right").prepend('<span class="alert2 alert-success2 pull-left"><i class="fa fa-check-circle"></i> '+json['success']+'</span>');
+				$(".alert-success2").hide(0).delay(10).fadeIn(500);
+   				$(".alert-success2").show(0).delay(3000).fadeOut(2000);
+				setTimeout(function() {
+					location.reload();
+				}, 1000);			
+			} else {
+				$(".page-header .container-fluid .pull-right").prepend('<span class="alert2 alert-danger2 pull-left"><i class="fa fa-exclamation-circle"></i> '+json['failed']+'</span>');
+			}
+		},			
+		error: function(xhr, ajaxOptions, thrownError) {
+			alert(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
+		}
+	});
+	$('[data-toggle=\'tooltip\']').tooltip('hide');
+});
+
+$(document).delegate('#disable_zones', 'click', function(e) {
+	e.preventDefault();	
+	$(".alert, .alert2").remove();
+	$('[data-toggle=\'tooltip\']').tooltip('hide');
+    var ajaxUrl = 'index.php?route=localisation/enhanced_zone/disableZones&user_token={{ user_token }}';
+	$.ajax({
+		url: ajaxUrl,
+		type: 'post',
+		data: $('input[name*=\'selected\']:checked').serialize(),
+		dataType: 'json',
+		beforeSend: function() {
+			$('#disable_zones i').replaceWith('<i class="fa fa-cog fa-spin"></i>');
+			$('#disable_zones').prop('disabled', true);			
+		},
+		complete: function() {
+			$('#disable_zones i').replaceWith('<i class="fa fa-close"></i>');
+			$('#disable_zones').prop('disabled', false);
+		},
+		success: function(json) {
+			if(json['success']) {
+				$(".page-header .container-fluid .pull-right").prepend('<span class="alert2 alert-success2 pull-left"><i class="fa fa-check-circle"></i> '+json['success']+'</span>');
+				$(".alert-success2").hide(0).delay(10).fadeIn(500);
+   				$(".alert-success2").show(0).delay(3000).fadeOut(2000);
+				setTimeout(function() {
+					location.reload();
+				}, 1000);
+			} else {
+				$(".page-header .container-fluid .pull-right").prepend('<span class="alert2 alert-danger2 pull-left"><i class="fa fa-exclamation-circle"></i> '+json['failed']+'</span>');	
+			}
+		},			
+		error: function(xhr, ajaxOptions, thrownError) {
+			alert(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
+		}
+	});
+	$('[data-toggle=\'tooltip\']').tooltip('hide');
+});
+//--></script>
+
+
+{{ footer }}
